@@ -1,6 +1,12 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
+  safelist: [
+    'bg-gradient-to-r',
+    'from-orange-900', 'to-orange-700',
+    'from-purple-900', 'to-purple-700',
+    'from-blue-900', 'to-blue-800',
+  ],
   theme: {
     screens: {
       xs: '480px',

@@ -12,8 +12,8 @@ const banners = [
     subtitle: 'Free Prescription Lenses on all orders',
     cta: 'Shop Now',
     link: '/shop',
-    bg: 'from-primary to-blue-900',
-    image: 'https://images.unsplash.com/photo-1574258495973-f010dfbb5371?w=800&q=80',
+    bgClass: 'bg-gradient-to-r from-[#0a0a2e] to-blue-900',
+    image: 'https://picsum.photos/seed/banner1/800/500',
   },
   {
     id: 2,
@@ -22,8 +22,8 @@ const banners = [
     subtitle: 'UV400 Protection | Polarized Lenses',
     cta: 'Explore',
     link: '/shop/sunglasses',
-    bg: 'from-orange-900 to-orange-700',
-    image: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=800&q=80',
+    bgClass: 'bg-gradient-to-r from-orange-900 to-orange-700',
+    image: 'https://picsum.photos/seed/banner2/800/500',
   },
   {
     id: 3,
@@ -32,22 +32,22 @@ const banners = [
     subtitle: 'Durable & Stylish frames for kids',
     cta: 'Shop Kids',
     link: '/shop/kids',
-    bg: 'from-purple-900 to-purple-700',
-    image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=800&q=80',
+    bgClass: 'bg-gradient-to-r from-purple-900 to-purple-700',
+    image: 'https://picsum.photos/seed/banner3/800/500',
   },
 ]
 
 const eyeglassCategories = [
-  { label: 'Men', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&q=80', link: '/shop/eyeglasses?gender=men' },
-  { label: 'Women', image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&q=80', link: '/shop/eyeglasses?gender=women' },
-  { label: 'Sports', image: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=300&q=80', link: '/shop/eyeglasses?shape=sport' },
-  { label: 'Kids', image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=300&q=80', link: '/shop/kids' },
+  { label: 'Men', image: 'https://picsum.photos/seed/men1/300/300', link: '/shop/eyeglasses?gender=men' },
+  { label: 'Women', image: 'https://picsum.photos/seed/women1/300/300', link: '/shop/eyeglasses?gender=women' },
+  { label: 'Sports', image: 'https://picsum.photos/seed/sports1/300/300', link: '/shop/eyeglasses?shape=sport' },
+  { label: 'Kids', image: 'https://picsum.photos/seed/kids1/300/300', link: '/shop/kids' },
 ]
 
 const sunglassCategories = [
-  { label: 'Men', image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&q=80', link: '/shop/sunglasses?gender=men' },
-  { label: 'Women', image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300&q=80', link: '/shop/sunglasses?gender=women' },
-  { label: 'Unisex', image: 'https://images.unsplash.com/photo-1473496169904-658ba7574b0d?w=300&q=80', link: '/shop/sunglasses?gender=unisex' },
+  { label: 'Men', image: 'https://picsum.photos/seed/sunmen1/300/300', link: '/shop/sunglasses?gender=men' },
+  { label: 'Women', image: 'https://picsum.photos/seed/sunwomen1/300/300', link: '/shop/sunglasses?gender=women' },
+  { label: 'Unisex', image: 'https://picsum.photos/seed/unisex1/300/300', link: '/shop/sunglasses?gender=unisex' },
 ]
 
 const features = [
@@ -75,7 +75,7 @@ export default function Home() {
       <div className="relative overflow-hidden h-[280px] sm:h-[360px] md:h-[480px]">
         {banners.map((banner, i) => (
           <div key={banner.id}
-            className={`absolute inset-0 bg-gradient-to-r ${banner.bg} transition-opacity duration-700 ${i === currentBanner ? 'opacity-100' : 'opacity-0'}`}>
+            className={`absolute inset-0 ${banner.bgClass} transition-opacity duration-700 ${i === currentBanner ? 'opacity-100' : 'opacity-0'}`}>
             <div className="max-w-7xl mx-auto px-4 h-full flex items-center">
               <div className="flex-1 text-white z-10 pr-4">
                 <p className="text-[10px] sm:text-xs font-medium text-white/70 mb-1 sm:mb-2 uppercase tracking-widest">New Collection 2024</p>

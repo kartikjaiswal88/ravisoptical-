@@ -18,11 +18,30 @@ import AdminAddProduct from './pages/admin/AdminAddProduct'
 import AdminOrders from './pages/admin/AdminOrders'
 import ProtectedRoute from './components/ProtectedRoute'
 
+const Layout = ({ children }) => (
+  <div className="flex flex-col min-h-screen">
+    <Navbar />
+    <main className="flex-1">{children}</main>
+    <Footer />
+  </div>
+)
+
 export default function App() {
   return (
     <AppProvider>
-      <BrowserRouter>
+      <BrowserRouter basename="/ravisoptical-">
         <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Layout><Home /></Layout>} />
+          <Route path="/shop" element={<Layout><Shop /></Layout>} />
+          <Route path="/shop/:category" element={<Layout><Shop /></Layout>} />
+          <Route path="/product/:id" element={<Layout><ProductDetail /></Layout>} />
+          <Route path="/cart" element={<Layout><Cart /></Layout>} />
+          <Route path="/checkout" element={<Layout><Checkout /></Layout>} />
+          <Route path="/wishlist" element={<Layout><Wishlist /></Layout>} />
+          <Route path="/about" element={<Layout><About /></Layout>} />
+          <Route path="/contact" element={<Layout><Contact /></Layout>} />
+
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
@@ -30,27 +49,6 @@ export default function App() {
           <Route path="/admin/products/add" element={<ProtectedRoute><AdminAddProduct /></ProtectedRoute>} />
           <Route path="/admin/products/edit/:id" element={<ProtectedRoute><AdminAddProduct /></ProtectedRoute>} />
           <Route path="/admin/orders" element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
-
-          {/* Public Routes */}
-          <Route path="/*" element={
-            <div className="flex flex-col min-h-screen">
-              <Navbar />
-              <main className="flex-1">
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/shop" element={<Shop />} />
-                  <Route path="/shop/:category" element={<Shop />} />
-                  <Route path="/product/:id" element={<ProductDetail />} />
-                  <Route path="/cart" element={<Cart />} />
-                  <Route path="/checkout" element={<Checkout />} />
-                  <Route path="/wishlist" element={<Wishlist />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/contact" element={<Contact />} />
-                </Routes>
-              </main>
-              <Footer />
-            </div>
-          } />
         </Routes>
       </BrowserRouter>
     </AppProvider>

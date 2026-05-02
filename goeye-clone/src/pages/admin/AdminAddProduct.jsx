@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Upload, Check, ArrowLeft } from 'lucide-react'
+import { Upload, Check, ArrowLeft, Loader2, AlertCircle } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import AdminLayout from './AdminLayout'
+import { uploadImageToGitHub } from '../../utils/githubUpload'
+import { GITHUB_CONFIG } from '../../utils/githubConfig'
 
 const defaultForm = {
   name: '', category: 'eyeglasses', gender: 'unisex', price: '', originalPrice: '',
@@ -18,6 +20,9 @@ export default function AdminAddProduct() {
   const [form, setForm] = useState(defaultForm)
   const [saved, setSaved] = useState(false)
   const [preview, setPreview] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
+  const [uploadSuccess, setUploadSuccess] = useState(false)
 
   useEffect(() => {
     if (isEdit) {
@@ -28,23 +33,51 @@ export default function AdminAddProduct() {
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }))
 
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files[0]
-    if (file) {
-      const url = URL.createObjectURL(file)
-      setPreview(url)
-      set('image', url)
+    if (!file) return
+
+    // Show local preview immediately
+    const localUrl = URL.createObjectURL(file)
+    setPreview(localUrl)
+    setUploadError('')
+    setUploadSuccess(false)
+
+    // Check if token is configured
+    if (!GITHUB_CONFIG.token) {
+      setUploadError('GitHub token not configured. Add your token in src/utils/githubConfig.js')
+      return
+    }
+
+    setUploading(true)
+    try {
+      const githubUrl = await uploadImageToGitHub(file, GITHUB_CONFIG)
+      set('image', githubUrl)
+      setPreview(githubUrl)
+      setUploadSuccess(true)
+    } catch (err) {
+      setUploadError(`Upload failed: ${err.message}`)
+      // Keep local preview but don't save the blob URL
+    } finally {
+      setUploading(false)
     }
   }
 
   const handleImageUrl = (url) => {
     set('image', url)
     setPreview(url)
+    setUploadError('')
+    setUploadSuccess(false)
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    const data = { ...form, price: Number(form.price), originalPrice: Number(form.originalPrice), stock: Number(form.stock) }
+    const data = {
+      ...form,
+      price: Number(form.price),
+      originalPrice: Number(form.originalPrice),
+      stock: Number(form.stock)
+    }
     if (isEdit) updateProduct(Number(id), data)
     else addProduct(data)
     setSaved(true)
@@ -58,6 +91,8 @@ export default function AdminAddProduct() {
     { key: 'color', label: 'Color', type: 'text' },
     { key: 'stock', label: 'Stock Quantity', type: 'number' },
   ]
+
+  const tokenConfigured = Boolean(GITHUB_CONFIG.token)
 
   return (
     <AdminLayout>
@@ -77,30 +112,70 @@ export default function AdminAddProduct() {
           {/* Image Upload */}
           <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-6">
             <h3 className="font-semibold text-gray-800 mb-3 sm:mb-4 text-sm sm:text-base">Product Image</h3>
-            <div className="flex gap-3 sm:gap-4 items-start">
-              <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gray-50 rounded-xl overflow-hidden border-2 border-dashed border-gray-200 flex items-center justify-center shrink-0">
-                {preview
-                  ? <img src={preview} alt="preview" className="w-full h-full object-cover" />
-                  : <Upload size={20} className="text-gray-300" />
-                }
+
+            {/* Token warning */}
+            {!tokenConfigured && (
+              <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 mb-3 text-xs text-amber-700">
+                <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                <span>GitHub token not set. Images uploaded via file picker won't persist after refresh. Add your token in <code className="bg-amber-100 px-1 rounded">src/utils/githubConfig.js</code> to enable permanent uploads.</span>
               </div>
+            )}
+
+            <div className="flex gap-3 sm:gap-4 items-start">
+              {/* Preview */}
+              <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gray-50 rounded-xl overflow-hidden border-2 border-dashed border-gray-200 flex items-center justify-center shrink-0 relative">
+                {preview ? (
+                  <img src={preview} alt="preview" className="w-full h-full object-cover" />
+                ) : (
+                  <Upload size={20} className="text-gray-300" />
+                )}
+                {uploading && (
+                  <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                    <Loader2 size={24} className="text-primary animate-spin" />
+                  </div>
+                )}
+              </div>
+
               <div className="flex-1 space-y-2 sm:space-y-3 min-w-0">
+                {/* File upload */}
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Upload from device</label>
-                  <input type="file" accept="image/*" onChange={handleImageChange}
-                    className="block w-full text-xs sm:text-sm text-gray-500 file:mr-2 sm:file:mr-3 file:py-1.5 sm:file:py-2 file:px-3 sm:file:px-4 file:rounded-full file:border-0 file:text-xs sm:file:text-sm file:font-medium file:bg-primary file:text-white hover:file:bg-opacity-90 cursor-pointer" />
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                    Upload from device
+                    {tokenConfigured && <span className="ml-1 text-green-600 text-[10px]">→ saves to GitHub</span>}
+                  </label>
+                  <input type="file" accept="image/*" onChange={handleImageChange} disabled={uploading}
+                    className="block w-full text-xs sm:text-sm text-gray-500 file:mr-2 sm:file:mr-3 file:py-1.5 sm:file:py-2 file:px-3 sm:file:px-4 file:rounded-full file:border-0 file:text-xs sm:file:text-sm file:font-medium file:bg-primary file:text-white hover:file:bg-opacity-90 cursor-pointer disabled:opacity-50" />
                 </div>
+
+                {/* Status messages */}
+                {uploading && (
+                  <p className="text-xs text-blue-600 flex items-center gap-1">
+                    <Loader2 size={12} className="animate-spin" /> Uploading to GitHub...
+                  </p>
+                )}
+                {uploadSuccess && (
+                  <p className="text-xs text-green-600 flex items-center gap-1">
+                    <Check size={12} /> Uploaded to GitHub successfully
+                  </p>
+                )}
+                {uploadError && (
+                  <p className="text-xs text-red-500 flex items-start gap-1">
+                    <AlertCircle size={12} className="shrink-0 mt-0.5" /> {uploadError}
+                  </p>
+                )}
+
+                {/* URL input */}
                 <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Or paste image URL</label>
                   <input type="url" value={form.image} onChange={e => handleImageUrl(e.target.value)}
-                    placeholder="https://example.com/image.jpg"
+                    placeholder="https://raw.githubusercontent.com/..."
                     className="w-full border border-gray-200 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm outline-none focus:border-primary transition-colors" />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Details */}
+          {/* Product Details */}
           <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-4 sm:p-6">
             <h3 className="font-semibold text-gray-800 mb-3 sm:mb-4 text-sm sm:text-base">Product Details</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -163,9 +238,9 @@ export default function AdminAddProduct() {
               className="px-4 sm:px-6 py-2.5 sm:py-3 border border-gray-200 rounded-full text-xs sm:text-sm font-medium hover:bg-gray-50 transition-colors">
               Cancel
             </button>
-            <button type="submit"
-              className={`flex items-center gap-2 px-6 sm:px-8 py-2.5 sm:py-3 rounded-full font-semibold transition-all text-xs sm:text-sm ${saved ? 'bg-green-500 text-white' : 'bg-primary text-white hover:bg-opacity-90'}`}>
-              {saved ? <><Check size={14} /> Saved!</> : isEdit ? 'Update Product' : 'Add Product'}
+            <button type="submit" disabled={uploading}
+              className={`flex items-center gap-2 px-6 sm:px-8 py-2.5 sm:py-3 rounded-full font-semibold transition-all text-xs sm:text-sm disabled:opacity-60 ${saved ? 'bg-green-500 text-white' : 'bg-primary text-white hover:bg-opacity-90'}`}>
+              {saved ? <><Check size={14} /> Saved!</> : uploading ? <><Loader2 size={14} className="animate-spin" /> Uploading...</> : isEdit ? 'Update Product' : 'Add Product'}
             </button>
           </div>
         </form>

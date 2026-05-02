@@ -22,7 +22,7 @@ export default function About() {
               From prescription glasses to stylish sunglasses, every frame in our collection is carefully curated for quality, comfort, and style.
             </p>
           </div>
-          <img src="https://images.unsplash.com/photo-1574258495973-f010dfbb5371?w=600&q=80" alt="About" className="rounded-2xl shadow-lg" />
+          <img src="https://picsum.photos/seed/about1/600/400" alt="About" className="rounded-2xl shadow-lg" />
         </div>
 
         {/* Values */}
